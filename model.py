@@ -14,30 +14,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from dbn.tensorflow import UnsupervisedDBN
 
+from utils import bitify
+
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 DBN_NETWORK_FILENAME = 'dbn_model.pkl'
 MLP_NETWORK_FILENAME = 'mlp_model.pkl'
-DATA_FILENAME = '/home/ubuntu/repos/pychess/data_ready.csv'
-
-
-def bitify(fen: str):
-    board = chess.Board(fen)
-    result = np.zeros(768+5)
-    for idx, element in enumerate(product(chess.PIECE_TYPES, chess.COLORS)):
-        piece = element[0]
-        color = element[1]
-        piece_mask = board.pieces_mask(piece, color)
-        bitarray = bitstring.BitArray(uint=piece_mask, length=64)
-        result[idx*64:(idx+1)*64] = [int(i) for i in list(bitarray)]
-
-    result[768] = int(board.has_kingside_castling_rights(chess.WHITE))
-    result[769] = int(board.has_queenside_castling_rights(chess.WHITE))
-    result[770] = int(board.has_kingside_castling_rights(chess.BLACK))
-    result[771] = int(board.has_queenside_castling_rights(chess.BLACK))
-    result[772] = int(board.turn)
-    return [int(i) for i in result.tolist()]
+DATA_FILENAME = 'data_ready.csv'
 
 
 def train_dbn(X):
@@ -107,12 +91,13 @@ def gather_data():
     with open(DATA_FILENAME, 'r') as file:
         raw_data = list(map(str.strip, file.readlines()))
 
-    white_wins = list(filter(lambda e: '1-0' in e, raw_data))[:1000]
-    black_wins = list(filter(lambda e: '0-1' in e, raw_data))[:1000]
-    data = list(product(white_wins, black_wins))
+    white_wins = list(filter(lambda e: '1-0' in e, raw_data))[:500]
+    black_wins = list(filter(lambda e: '0-1' in e, raw_data))[:500]
+    
+    data = product(white_wins, black_wins)
     mlp_data, mlp_labels = extract_mlp_data(data)
 
-    dbn_data = extract_dbn_data(white_wins, black_wins) # [1:] so that header line gets removed
+    dbn_data = extract_dbn_data(white_wins, black_wins)
     return dbn_data, np.array(mlp_data), np.array(mlp_labels)
 
 
@@ -133,7 +118,10 @@ def main():
         print(str(result))
         sys.exit(0)
 
+    print("Gathering data in memory...")
     dbn_data, mlp_data, mlp_labels = gather_data()
+    print("Gathering Data Done!")
+    
     print("Splitting data in Training and Test Data...")
     X_train, X_test, Y_train, Y_test = train_test_split(
         mlp_data,

@@ -4,3 +4,4 @@ data*
 games.pgn
 nohup.out
 venv/
+.ipynb_checkpoints/

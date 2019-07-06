@@ -5,7 +5,8 @@ import chess
 import bitstring
 
 
-def bitify(board: chess.Board):
+def bitify(fen: str):
+    board = chess.Board(fen)
     result = np.zeros(768+5)
     for idx, element in enumerate(itertools.product(chess.PIECE_TYPES, chess.COLORS)):
         piece = element[0]
