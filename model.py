@@ -112,8 +112,8 @@ def test_mlp(X, Y):
 
 def main():
     if len(sys.argv) >= 2 and sys.argv[1] == 'predict':
-        first = list(map(int, sys.argv[2][1:-1].split(',')))
-        second = list(map(int, sys.argv[3][1:-1].split(',')))
+        first = bitify(sys.argv[2])
+        second = bitify(sys,argv[3])
         result = predict_mlp(first, second)
         print(str(result))
         sys.exit(0)
